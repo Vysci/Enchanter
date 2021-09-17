@@ -3,6 +3,8 @@ WoW Addon that helps enchanters get connected with those looking for enchants. T
 
 Enchanter scans and saves your characters known enchanting recipes, it will then be parsing chat for any requests that match the known recipes. Once there is a match it will auto invite the person and whisper them a link to all of the requested enchant recipes that the enchanter is capable of doing. 
 
+If you discover that a request was either wrongfully matched or not matched please provide the full request message
+
 ## Usage VERY IMPORTANT
 
 You need to first run /ec scan this will store your known recipes and will be parsing chat for them (only need to do it 1 time or if you learned new recipes) after run /ec start to start looking for requests
@@ -24,4 +26,7 @@ What this means is:
 - Messages that are just "LF Enchanter" will be ignored (THIS IS INTENDED BEHAVIOR)
 - On occasion a whisper don't be send
 
-If you discover that a request was either wrongfully matched or not matched please provide the full request message
+## Future Features
+- Having settings 
+- Ability to modify tags
+- Maybe more professions (prob not)
