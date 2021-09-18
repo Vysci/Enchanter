@@ -73,7 +73,7 @@ end
 function EC.SendMsg(name)
 		if EC.LfRecipeList[name] ~= nil then
 			-- Iterates over the matches requested enchants (that is capable of doing) adds them to the message
-			local msg = ""
+			local msg = "I can do the following enchants: "
 			for _, v in pairs(EC.LfRecipeList[name]) do 
 				msg = msg .. EC.DBChar.RecipeLinks[v]
 			end
