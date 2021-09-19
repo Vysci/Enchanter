@@ -67,13 +67,14 @@ function EC.Init()
 	})
 
     EC.Initalized = true
+	print("|cFFFF1C1C Loaded: "..GetAddOnMetadata(TOCNAME, "Title") .." ".. GetAddOnMetadata(TOCNAME, "Version") .." by "..GetAddOnMetadata(TOCNAME, "Author"))
 end
 
 -- Sends a msg with the enchanting links that enchanter is capable of doing
 function EC.SendMsg(name)
 		if EC.LfRecipeList[name] ~= nil then
 			-- Iterates over the matches requested enchants (that is capable of doing) adds them to the message
-			local msg = "I can do the following enchants: "
+			local msg = "I can do "
 			for _, v in pairs(EC.LfRecipeList[name]) do 
 				msg = msg .. EC.DBChar.RecipeLinks[v]
 			end
