@@ -1,0 +1,8 @@
+v1.2 
+	- Added options to modify tags and custom msg prefix
+
+v1.1 
+	- Updated tags
+
+v1.0 
+	- Initial Version
