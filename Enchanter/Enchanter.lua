@@ -5,6 +5,7 @@ Enchanter_Addon=EC
 EC.Initalized = false
 EC.PlayerList = {}
 EC.LfRecipeList = {}
+EC.DefaultMsg = "I can do "
 
 -- Scans the users known recipes and stores them
 -- Additionally it also stores the recipes clickable link, that will be used when messaging the user (for those people asks what are the mats?)
@@ -17,10 +18,7 @@ function EC.GetItems()
         local craftName, _, craftType, numAvailable = GetCraftInfo(i);
 		if EC.RecipeTags["enGB"][craftName] ~= nil then 
 			EC.DBChar.RecipeLinks[craftName] = GetCraftRecipeLink(i)
-
-			for k,v in pairs(EC.RecipeTags["enGB"][craftName]) do
-				EC.DBChar.RecipeList[v:lower()] = craftName
-			end
+			EC.DBChar.RecipeList[craftName] = EC.RecipeTags["enGB"][craftName]
 		end
     end
 end
@@ -37,8 +35,10 @@ function EC.Init()
 	-- Initialize DB Variables if not set
 	if not EC.DBChar.RecipeList then EC.DBChar.RecipeList = {} end
 	if not EC.DBChar.RecipeLinks then EC.DBChar.RecipeLinks = {} end
+	if not EC.DB.Custom then EC.DB.Custom={} end
 	if not EC.DBChar.Stop then EC.DBChar.Stop = false end
 	if not EC.DBChar.Debug then EC.DBChar.Debug = false end
+	if not EC.DB.MsgPrefix then EC.DB.MsgPrefix = EC.DefaultMsg end
 
 
 	EC.Tool.SlashCommand({"/ec", "/enchanter"},{
@@ -54,6 +54,7 @@ function EC.Init()
 			EC.DBChar.Stop = false
 			print("Started...")
 		end},
+		{{"config","setup","options"},"Settings",EC.Options.Open,1},
 		{"debug","Enables/Disabled debug messages",function()
 			if EC.DBChar.Debug== true then
 				EC.DBChar.Debug = false
@@ -66,7 +67,9 @@ function EC.Init()
 		{{"about", "usage"},"You need to first run /ec scan this will store your known recipes and will be parsing chat for them (only need to do it 1 time or if you learned new recipes) after run /ec start to start looking for requests"},
 	})
 
+	EC.OptionsInit()
     EC.Initalized = true
+
 	print("|cFFFF1C1C Loaded: "..GetAddOnMetadata(TOCNAME, "Title") .." ".. GetAddOnMetadata(TOCNAME, "Version") .." by "..GetAddOnMetadata(TOCNAME, "Author"))
 end
 
@@ -74,9 +77,9 @@ end
 function EC.SendMsg(name)
 		if EC.LfRecipeList[name] ~= nil then
 			-- Iterates over the matches requested enchants (that is capable of doing) adds them to the message
-			local msg = "I can do "
-			for _, v in pairs(EC.LfRecipeList[name]) do 
-				msg = msg .. EC.DBChar.RecipeLinks[v]
+			local msg = EC.DB.MsgPrefix
+			for k, _ in pairs(EC.LfRecipeList[name]) do 
+				msg = msg .. EC.DBChar.RecipeLinks[k]
 			end
 			SendChatMessage(msg, "WHISPER", nil, name)
 			EC.LfRecipeList[name] = nil -- Clearing it so it doesn't growing larger unnecessarily 
@@ -103,15 +106,17 @@ function EC.ParseMessage(msg, name)
 
 	-- The storing of the recipe links is really un-needed (leftover from another iteration) but I'm too lazy to change the code
 	for k, v in pairs(EC.DBChar.RecipeList) do
-		if string.find(msg:lower(), k, 1, true) then
+		for _, v2 in pairs(v) do
+		if string.find(msg:lower(), v2, 1, true) then
 			if not EC.LfRecipeList[name] then EC.LfRecipeList[name] = {} end
 			if EC.DBChar.Debug == true then
 				print("User should be invited for msg: " .. msg)
-				print("Due to tag: " .. k)
+				print("Due to tag: " .. v2)
 			end
 			shouldInvite = true
-			EC.LfRecipeList[name][v] = v
-		end 
+			EC.LfRecipeList[name][k] = v2
+			end 
+		end
 	end
 	
 	if shouldInvite == true then

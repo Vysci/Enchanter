@@ -9,5 +9,6 @@
 LibGPIOptions.lua
 LibGPIToolBox.lua
 Tags.lua
+Options.lua
 Enchanter.lua
 Enchanter.xml

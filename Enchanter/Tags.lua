@@ -3,7 +3,7 @@ local TOCNAME,EC=...
 local function langSplit(source)
 	local ret={}
 	for lang,pat in pairs(source) do
-			ret[lang]=EC.Tool.Split(pat,",")
+			ret[lang]=EC.Tool.Split(pat:lower(),",")
 	end
 	return ret
 end
@@ -67,7 +67,7 @@ EC.RecipeTags={
 	--["Enchant Gloves - Healing Power"] = "Enchant Gloves - Healing Power,",
 	["Enchant Gloves - Major Healing"] = "Enchant Gloves - Major Healing,35 heal,healing to glove,healing to hand,heal to glove,heal to hand",
 	["Enchant Gloves - Major Spellpower"] = "Enchant Gloves - Major Spellpower,sp to hand,20sp to glove,20 sp to glove,20+ sp to glove,20sp glove,",
-	["Enchant Gloves - Major Strength"] = "Enchant Gloves - Major Strength,major str,15 str,15+ str",
+	["Enchant Gloves - Major Strength"] = "Enchant Gloves - Major Strength,major str,15 str,15+ str,str glove",
 	["Enchant Gloves - Shadow Power"] = "Enchant Gloves - Shadow Power,shadow power,20 shadow",
 	["Enchant Gloves - Spell Strike"] = "Enchant Gloves - Spell Strike,spell strike,hit to glove,hit to hand,15 hit,15 spell hit",
 	["Enchant Gloves - Superior Agility"] = "Enchant Gloves - Superior Agility,superior agility,15 agi,15agi,15+ agi ",
@@ -86,7 +86,7 @@ EC.RecipeTags={
 	["Enchant Weapon - Lifestealing"] = "Enchant Weapon - Lifestealing,lifesteal,life steal",
 	["Enchant Weapon - Major Healing"] = "Enchant Weapon - Major Healing,81 heal,81+ heal",
 	["Enchant Weapon - Major Intellect"] = "Enchant Weapon - Major Intellect,30 int,30+ int",
-	["Enchant Weapon - Major Spellpower"] = "Enchant Weapon - Major Spellpower,40 sp,40 spell",
+	["Enchant Weapon - Major Spellpower"] = "Enchant Weapon - Major Spellpower,40 sp,40 spell,40+ spell",
 	--["Enchant Weapon - Major Striking"] = " ",
 	--["Enchant Weapon - Mighty Intellect"] = " ",
 	["Enchant Weapon - Mighty Spirit"] = "Enchant Weapon - Mighty Spirit,20 spirit,20+ spirit",
