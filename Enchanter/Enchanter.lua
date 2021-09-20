@@ -6,6 +6,7 @@ EC.Initalized = false
 EC.PlayerList = {}
 EC.LfRecipeList = {}
 EC.DefaultMsg = "I can do "
+EC.RecipesWithNether = {"Enchant Boots - Surefooted"}
 
 -- Scans the users known recipes and stores them
 -- Additionally it also stores the recipes clickable link, that will be used when messaging the user (for those people asks what are the mats?)
@@ -21,6 +22,12 @@ function EC.GetItems()
 			EC.DBChar.RecipeList[craftName] = EC.RecipeTags["enGB"][craftName]
 		end
     end
+
+	if EC.DB.NetherRecipes then
+		for _, v in pairs(EC.RecipesWithNether) do
+			EC.DBChar.RecipeList[v] = nil
+		end
+	end
 end
 
 function EC.Init()
@@ -126,7 +133,9 @@ function EC.ParseMessage(msg, name)
 				print("Inviting Player: " .. name .. " for request: " .. msg)
 			end
 			EC.PlayerList[name] = 1
-			InviteUnit(name)
+			if EC.DB.AutoInvite then
+				InviteUnit(name)
+			end
 			-- Reason for whispering them before the join the group is in case they are already in a group
 			EC.SendMsg(name)
 		else
@@ -158,5 +167,7 @@ function EC.OnLoad()
 	EC.Tool.RegisterEvent("CHAT_MSG_CHANNEL",Event_CHAT_MSG_CHANNEL)
 	EC.Tool.RegisterEvent("CHAT_MSG_SAY",Event_CHAT_MSG_CHANNEL)
 	EC.Tool.RegisterEvent("CHAT_MSG_YELL",Event_CHAT_MSG_CHANNEL)
+	EC.Tool.RegisterEvent("CHAT_MSG_GUILD",Event_CHAT_MSG_CHANNEL)
+	EC.Tool.RegisterEvent("CHAT_MSG_OFFICER",Event_CHAT_MSG_CHANNEL)
 end
 
