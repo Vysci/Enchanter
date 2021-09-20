@@ -56,15 +56,23 @@ function EC.OptionsInit ()
 	-- Tags Tab
 	EC.Options.AddPanel("Enchanter",false,true)
 	
-	EC.Options.AddCategory("Search Patterns")
+	EC.Options.AddCategory("General Options")
 	EC.Options.Indent(10)
 	EC.Options.InLine()
+	EC.Options.AddCheckBox(EC.DB, "AutoInvite", true, "Auto Invite")
+	EC.Options.AddCheckBox(EC.DB, "NetherRecipes", false, "Disable Nether Recipes")
+	EC.Options.EndInLine()
+	EC.Options.Indent(-10)
+
+	EC.Options.AddCategory("Search Patterns")
+	EC.Options.Indent(10)
+	EC.Options.AddText('Enter your own unique search patterns here. You must use "," (comma) as the seperator with no space after it', 450+200)
 	EC.Options.AddSpace()
 
 	-- Message String
-	EC.Options.AddEditBox(EC.DB, "MsgPrefix", EC.DB.MsgPrefix, "Message Prefix", 445, 200, false, nil, EC.DB.MsgPrefix)
-	EC.Options.AddSpace()
+	EC.Options.AddEditBox(EC.DB, "MsgPrefix", EC.DB.MsgPrefix, "Message Prefix", 445, 200, false, nil, EC.DB.MsgPrefix)	
 
+	EC.Options.AddSpace()
 	-- Recipe Tags
 	for k,v in pairs(EC.RecipeTags["enGB"]) do
 		local txt = EC.Tool.Combine(EC.RecipeTags["enGB"][k],",")
