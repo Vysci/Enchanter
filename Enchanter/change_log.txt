@@ -1,3 +1,9 @@
+v1.4
+- Ability to blacklist has been added
+- Fixed a bug that was causing the custom tags to wipe the text field instead of editing the tags themselves
+- Slash command "/e" has been added (fuck you ElvUI)
+- Fixed bug that would sometimes cause the tags to be out of sync between default and custom
+
 v1.3
 - Added option to toggle auto invite
 - Added option to toggle recipes that require nether

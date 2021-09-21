@@ -48,9 +48,10 @@ function EC.Init()
 	if not EC.DB.MsgPrefix then EC.DB.MsgPrefix = EC.DefaultMsg end
 
 
-	EC.Tool.SlashCommand({"/ec", "/enchanter"},{
+	EC.Tool.SlashCommand({"/ec", "/enchanter", "/e"},{
 		{"scan","MUST BE RAN PRIOR TO /ec start. Scans and stores your enchanting recipes to be used when filter for requests. NOTE: You need to rerun this when you learn new recipes",function()
 			EC.GetItems()
+			EC.UpdateTags()
 			print("Scan Completed")
 			end},
 		{{"stop", "pause"},"Pauses addon",function()
@@ -75,6 +76,8 @@ function EC.Init()
 	})
 
 	EC.OptionsInit()
+	EC.UpdateTags()
+	EC.BlackList = EC.Tool.Split(EC.DB.Custom.BlackList:lower(), ",")
     EC.Initalized = true
 
 	print("|cFFFF1C1C Loaded: "..GetAddOnMetadata(TOCNAME, "Title") .." ".. GetAddOnMetadata(TOCNAME, "Version") .." by "..GetAddOnMetadata(TOCNAME, "Author"))
@@ -105,6 +108,15 @@ function EC.ParseMessage(msg, name)
 	for _, v in pairs(EC.PrefixTags) do 
 		if string.find(msg:lower(), "%f[%w_]" .. v .. "%f[^%w_]") then -- Important so it doesn't match things like LFW
 			isRequestValid = true
+		end
+	end
+
+	for _, v in pairs (EC.BlackList) do 
+		if string.find(msg:lower(), "%f[%w_]" .. v .. "%f[^%w_]") then
+			if EC.DBChar.Debug == true then
+				print("Request: " .. msg .. " is being blacklisted due to tag: " .. v)
+			end
+			isRequestValid = false
 		end
 	end
 
