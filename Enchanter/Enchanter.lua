@@ -5,7 +5,7 @@ Enchanter_Addon=EC
 EC.Initalized = false
 EC.PlayerList = {}
 EC.LfRecipeList = {}
-EC.DefaultMsg = "I can do "
+EC.TaskList  = {}
 EC.RecipesWithNether = {"Enchant Boots - Surefooted"}
 
 -- Scans the users known recipes and stores them
@@ -45,13 +45,12 @@ function EC.Init()
 	if not EC.DB.Custom then EC.DB.Custom={} end
 	if not EC.DBChar.Stop then EC.DBChar.Stop = false end
 	if not EC.DBChar.Debug then EC.DBChar.Debug = false end
-	if not EC.DB.MsgPrefix then EC.DB.MsgPrefix = EC.DefaultMsg end
-
 
 	EC.Tool.SlashCommand({"/ec", "/enchanter", "/e"},{
 		{"scan","MUST BE RAN PRIOR TO /ec start. Scans and stores your enchanting recipes to be used when filter for requests. NOTE: You need to rerun this when you learn new recipes",function()
 			EC.GetItems()
-			EC.UpdateTags()
+			-- DON"T FORGET TO UPDATE THE TAGS SETTING WITH POTENTIALLY NEW TAGS
+			EC.DefaultCustomTags()
 			print("Scan Completed")
 			end},
 		{{"stop", "pause"},"Pauses addon",function()
@@ -94,6 +93,11 @@ function EC.SendMsg(name)
 			SendChatMessage(msg, "WHISPER", nil, name)
 			EC.LfRecipeList[name] = nil -- Clearing it so it doesn't growing larger unnecessarily 
 		end
+end
+
+function EC.ScheduleTask(delayTime, func) 
+	local scheduledFor = time() + delayTime
+	table.insert(EC.TaskList, {runTime = scheduledFor, task = func})
 end
 
 -- For a message it will attempt to filter the request based on any of the words in EC.PrefixTags
@@ -144,15 +148,35 @@ function EC.ParseMessage(msg, name)
 			if EC.DBChar.Debug == true then
 				print("Inviting Player: " .. name .. " for request: " .. msg)
 			end
+
 			EC.PlayerList[name] = 1
+
 			if EC.DB.AutoInvite then
-				InviteUnit(name)
+				local invFunc = function() InviteUnit(name) end
+				EC.ScheduleTask(EC.DB.InviteTimeDelay, invFunc)
 			end
 			-- Reason for whispering them before the join the group is in case they are already in a group
-			EC.SendMsg(name)
+			local sendMsgFunc = function() EC.SendMsg(name) end
+			EC.ScheduleTask(EC.DB.WhisperTimeDelay, sendMsgFunc)
 		else
 			-- Due to the laziness of keeping the whole recipe storage thing, this is an optimization to clear it for users that have already been invited
 			EC.LfRecipeList[name] = nil
+		end
+	elseif EC.DB.WhisperLfRequests and isRequestValid and EC.PlayerList[name] == nil then
+	
+		local isGenericEnchantRequest = false
+		local stripedMsg = string.gsub(msg:lower(), "%s+", "")
+		for _, v in pairs(EC.EnchanterTags) do
+			local stripedTag = string.gsub(v:lower(), "%s+", "")
+			if stripedTag == stripedMsg then
+				isGenericEnchantRequest = true
+			end
+		end
+
+		if isGenericEnchantRequest then 
+			EC.PlayerList[name] = 1
+			local sendMsgFunc = function() SendChatMessage(EC.DB.LfWhisperMsg, "WHISPER", nil, name) end
+			EC.ScheduleTask(EC.DB.WhisperTimeDelay, sendMsgFunc)
 		end
 	end
 end
@@ -174,6 +198,18 @@ local function Event_ADDON_LOADED(arg1)
 	end
 end
 
+function EC.OnUpdate()
+	if not EC.Initalized then return end
+
+	local currTime = time()
+	for k, data in pairs(EC.TaskList) do 
+		if currTime >= data.runTime then
+			data.task()
+			EC.TaskList[k] = nil
+		end
+	end
+end
+
 function EC.OnLoad()
     EC.Tool.RegisterEvent("ADDON_LOADED",Event_ADDON_LOADED)
 	EC.Tool.RegisterEvent("CHAT_MSG_CHANNEL",Event_CHAT_MSG_CHANNEL)
@@ -181,5 +217,7 @@ function EC.OnLoad()
 	EC.Tool.RegisterEvent("CHAT_MSG_YELL",Event_CHAT_MSG_CHANNEL)
 	EC.Tool.RegisterEvent("CHAT_MSG_GUILD",Event_CHAT_MSG_CHANNEL)
 	EC.Tool.RegisterEvent("CHAT_MSG_OFFICER",Event_CHAT_MSG_CHANNEL)
+
+	EC.Tool.OnUpdate(EC.OnUpdate)
 end
 
