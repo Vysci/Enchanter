@@ -5,7 +5,9 @@ Enchanter_Addon=EC
 EC.Initalized = false
 EC.PlayerList = {}
 EC.LfRecipeList = {}
-EC.DefaultMsg = "I can do "
+EC.EnchanterTags = EC.DefaultEnchanterTags
+EC.PrefixTags = EC.DefaultPrefixTags
+EC.RecipeTags = EC.DefaultRecipeTags
 EC.RecipesWithNether = {"Enchant Boots - Surefooted"}
 
 -- Scans the users known recipes and stores them
@@ -45,13 +47,10 @@ function EC.Init()
 	if not EC.DB.Custom then EC.DB.Custom={} end
 	if not EC.DBChar.Stop then EC.DBChar.Stop = false end
 	if not EC.DBChar.Debug then EC.DBChar.Debug = false end
-	if not EC.DB.MsgPrefix then EC.DB.MsgPrefix = EC.DefaultMsg end
-
 
 	EC.Tool.SlashCommand({"/ec", "/enchanter", "/e"},{
-		{"scan","MUST BE RAN PRIOR TO /ec start. Scans and stores your enchanting recipes to be used when filter for requests. NOTE: You need to rerun this when you learn new recipes",function()
+		{"scan","MUST BE RAN PRIOR TO /ee start. Scans and stores your enchanting recipes to be used when filter for requests. NOTE: You need to rerun this when you learn new recipes",function()
 			EC.GetItems()
-			EC.UpdateTags()
 			print("Scan Completed")
 			end},
 		{{"stop", "pause"},"Pauses addon",function()
@@ -61,6 +60,11 @@ function EC.Init()
 		{"start","Starts the addon. It will begin parsing chat looking for requests",function()
 			EC.DBChar.Stop = false
 			print("Started...")
+		end},
+		{{"default", "reset"},"Resets everything to default values",function()
+			EC.Default()
+			EC.UpdateTags()
+			print("Reset complete")
 		end},
 		{{"config","setup","options"},"Settings",EC.Options.Open,1},
 		{"debug","Enables/Disabled debug messages",function()
@@ -72,12 +76,10 @@ function EC.Init()
 				print("Debug mode is now on")
 			end
 		end},
-		{{"about", "usage"},"You need to first run /ec scan this will store your known recipes and will be parsing chat for them (only need to do it 1 time or if you learned new recipes) after run /ec start to start looking for requests"},
+		{{"about", "usage"},"You need to first run /e scan this will store your known recipes and will be parsing chat for them (only need to do it 1 time or if you learned new recipes) after run /e start to start looking for requests"},
 	})
 
 	EC.OptionsInit()
-	EC.UpdateTags()
-	EC.BlackList = EC.Tool.Split(EC.DB.Custom.BlackList:lower(), ",")
     EC.Initalized = true
 
 	print("|cFFFF1C1C Loaded: "..GetAddOnMetadata(TOCNAME, "Title") .." ".. GetAddOnMetadata(TOCNAME, "Version") .." by "..GetAddOnMetadata(TOCNAME, "Author"))
@@ -144,15 +146,33 @@ function EC.ParseMessage(msg, name)
 			if EC.DBChar.Debug == true then
 				print("Inviting Player: " .. name .. " for request: " .. msg)
 			end
+
 			EC.PlayerList[name] = 1
+
 			if EC.DB.AutoInvite then
-				InviteUnit(name)
+				C_Timer.After(EC.DB.InviteTimeDelay, function() InviteUnit(name) end)
+
 			end
 			-- Reason for whispering them before the join the group is in case they are already in a group
-			EC.SendMsg(name)
+			C_Timer.After(EC.DB.WhisperTimeDelay, function() EC.SendMsg(name) end)
 		else
 			-- Due to the laziness of keeping the whole recipe storage thing, this is an optimization to clear it for users that have already been invited
 			EC.LfRecipeList[name] = nil
+		end
+	elseif EC.DB.WhisperLfRequests and isRequestValid and EC.PlayerList[name] == nil then
+	
+		local isGenericEnchantRequest = false
+		local stripedMsg = string.gsub(msg:lower(), "%s+", "")
+		for _, v in pairs(EC.EnchanterTags) do
+			local stripedTag = string.gsub(v:lower(), "%s+", "")
+			if stripedTag == stripedMsg then
+				isGenericEnchantRequest = true
+			end
+		end
+
+		if isGenericEnchantRequest then 
+			EC.PlayerList[name] = 1
+			C_Timer.After(EC.DB.WhisperTimeDelay, function() SendChatMessage(EC.DB.LfWhisperMsg, "WHISPER", nil, name) end)
 		end
 	end
 end
