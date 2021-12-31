@@ -104,5 +104,6 @@ EC.DefaultRecipeTags={
 	["Superior Mana Oil"] = "Superior Mana Oil",
 	["Superior Wizard Oil"] = "Superior Wizard Oil",
 	--["Enchant Weapon - Deathfrost"] = " ",
+	["Enchant Weapon - Agility"] = "Enchant Weapon - Agility,+15 agi,+15 agility",
 	}),
 }
