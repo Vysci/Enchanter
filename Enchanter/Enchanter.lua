@@ -194,9 +194,9 @@ local function Event_CHAT_MSG_CHANNEL(msg,name,_3,_4,_5,_6,_7,channelID,channel,
 end
 
 function Event_CHAT_MSG_SYSTEM(msg)
-	if msg:match(_G["MARKED_AFK_MESSAGE"]:gsub("%%s", "%s-"))
+	if (msg:match(_G["MARKED_AFK_MESSAGE"]:gsub("%%s", "%s-"))
 	or msg:match(_G["MARKED_DND"])
-	or msg:match(_G["IDLE_MESSAGE"])
+	or msg:match(_G["IDLE_MESSAGE"]))
 	and EC.DB.AfkStop then
 		EC.Stop()
 	elseif msg:match(_G["CLEARED_AFK"]) and EC.DB.AfkStart then
