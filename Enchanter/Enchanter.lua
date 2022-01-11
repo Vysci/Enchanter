@@ -32,6 +32,16 @@ function EC.GetItems()
 	end
 end
 
+function EC.Stop()
+	EC.DBChar.Stop = true
+	print("Paused")
+end
+
+function EC.Start()
+	EC.DBChar.Stop = false
+	print("Started...")
+end
+
 function EC.Init()
 
 	-- Initalize options
@@ -53,14 +63,8 @@ function EC.Init()
 			EC.GetItems()
 			print("Scan Completed")
 			end},
-		{{"stop", "pause"},"Pauses addon",function()
-			EC.DBChar.Stop = true
-			print("Paused")
-		end},
-		{"start","Starts the addon. It will begin parsing chat looking for requests",function()
-			EC.DBChar.Stop = false
-			print("Started...")
-		end},
+		{{"stop", "pause"},"Pauses addon",EC.Stop},
+		{"start","Starts the addon. It will begin parsing chat looking for requests",EC.Start},
 		{{"default", "reset"},"Resets everything to default values",function()
 			EC.Default()
 			EC.UpdateTags()
@@ -90,8 +94,9 @@ function EC.SendMsg(name)
 		if EC.LfRecipeList[name] ~= nil then
 			-- Iterates over the matches requested enchants (that is capable of doing) adds them to the message
 			local msg = EC.DB.MsgPrefix
+			local msgSuffix = EC.DB.MsgSuffix
 			for k, _ in pairs(EC.LfRecipeList[name]) do 
-				msg = msg .. EC.DBChar.RecipeLinks[k]
+				msg = msg .. EC.DBChar.RecipeLinks[k] .. msgSuffix
 			end
 			SendChatMessage(msg, "WHISPER", nil, name)
 			EC.LfRecipeList[name] = nil -- Clearing it so it doesn't growing larger unnecessarily 
@@ -188,6 +193,17 @@ local function Event_CHAT_MSG_CHANNEL(msg,name,_3,_4,_5,_6,_7,channelID,channel,
 	EC.ParseMessage(msg, name)
 end
 
+function Event_CHAT_MSG_SYSTEM(msg)
+	if (msg:match(_G["MARKED_AFK_MESSAGE"]:gsub("%%s", "%s-"))
+	or msg:match(_G["MARKED_DND"])
+	or msg:match(_G["IDLE_MESSAGE"]))
+	and EC.DB.AfkStop then
+		EC.Stop()
+	elseif msg:match(_G["CLEARED_AFK"]) and EC.DB.AfkStart then
+		EC.Start()
+	end
+end
+
 local function Event_ADDON_LOADED(arg1)
 	if arg1 == TOCNAME then
 		EC.Init()
@@ -201,5 +217,6 @@ function EC.OnLoad()
 	EC.Tool.RegisterEvent("CHAT_MSG_YELL",Event_CHAT_MSG_CHANNEL)
 	EC.Tool.RegisterEvent("CHAT_MSG_GUILD",Event_CHAT_MSG_CHANNEL)
 	EC.Tool.RegisterEvent("CHAT_MSG_OFFICER",Event_CHAT_MSG_CHANNEL)
+	EC.Tool.RegisterEvent("CHAT_MSG_SYSTEM",Event_CHAT_MSG_SYSTEM)
 end
 
