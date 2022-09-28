@@ -5,9 +5,7 @@ Enchanter_Addon=EC
 EC.Initalized = false
 EC.PlayerList = {}
 EC.LfRecipeList = {}
-EC.EnchanterTags = EC.DefaultEnchanterTags
-EC.PrefixTags = EC.DefaultPrefixTags
-EC.RecipeTags = EC.DefaultRecipeTags
+EC.DefaultMsg = "I can do "
 EC.RecipesWithNether = {"Enchant Boots - Surefooted"}
 
 -- Scans the users known recipes and stores them
@@ -17,10 +15,10 @@ function EC.GetItems()
 	EC.DBChar.RecipeLinks = {}
 
 	CastSpellByName("Enchanting")
-	for i = 1, GetNumCrafts(), 1 do
-        local craftName, _, craftType, numAvailable = GetCraftInfo(i);
+	for i = 1, GetNumTradeSkills(), 1 do
+        local craftName, _, craftType, numAvailable =  GetTradeSkillInfo(i);
 		if EC.RecipeTags["enGB"][craftName] ~= nil then 
-			EC.DBChar.RecipeLinks[craftName] = GetCraftRecipeLink(i)
+			EC.DBChar.RecipeLinks[craftName] = GetTradeSkillRecipeLink(i)
 			EC.DBChar.RecipeList[craftName] = EC.RecipeTags["enGB"][craftName]
 		end
     end
@@ -30,16 +28,6 @@ function EC.GetItems()
 			EC.DBChar.RecipeList[v] = nil
 		end
 	end
-end
-
-function EC.Stop()
-	EC.DBChar.Stop = true
-	print("Paused")
-end
-
-function EC.Start()
-	EC.DBChar.Stop = false
-	print("Started...")
 end
 
 function EC.Init()
@@ -57,18 +45,22 @@ function EC.Init()
 	if not EC.DB.Custom then EC.DB.Custom={} end
 	if not EC.DBChar.Stop then EC.DBChar.Stop = false end
 	if not EC.DBChar.Debug then EC.DBChar.Debug = false end
+	if not EC.DB.MsgPrefix then EC.DB.MsgPrefix = EC.DefaultMsg end
+
 
 	EC.Tool.SlashCommand({"/ec", "/enchanter", "/e"},{
-		{"scan","MUST BE RAN PRIOR TO /ee start. Scans and stores your enchanting recipes to be used when filter for requests. NOTE: You need to rerun this when you learn new recipes",function()
+		{"scan","MUST BE RAN PRIOR TO /ec start. Scans and stores your enchanting recipes to be used when filter for requests. NOTE: You need to rerun this when you learn new recipes",function()
 			EC.GetItems()
+			EC.UpdateTags()
 			print("Scan Completed")
 			end},
-		{{"stop", "pause"},"Pauses addon",EC.Stop},
-		{"start","Starts the addon. It will begin parsing chat looking for requests",EC.Start},
-		{{"default", "reset"},"Resets everything to default values",function()
-			EC.Default()
-			EC.UpdateTags()
-			print("Reset complete")
+		{{"stop", "pause"},"Pauses addon",function()
+			EC.DBChar.Stop = true
+			print("Paused")
+		end},
+		{"start","Starts the addon. It will begin parsing chat looking for requests",function()
+			EC.DBChar.Stop = false
+			print("Started...")
 		end},
 		{{"config","setup","options"},"Settings",EC.Options.Open,1},
 		{"debug","Enables/Disabled debug messages",function()
@@ -80,10 +72,12 @@ function EC.Init()
 				print("Debug mode is now on")
 			end
 		end},
-		{{"about", "usage"},"You need to first run /e scan this will store your known recipes and will be parsing chat for them (only need to do it 1 time or if you learned new recipes) after run /e start to start looking for requests"},
+		{{"about", "usage"},"You need to first run /ec scan this will store your known recipes and will be parsing chat for them (only need to do it 1 time or if you learned new recipes) after run /ec start to start looking for requests"},
 	})
 
 	EC.OptionsInit()
+	EC.UpdateTags()
+	EC.BlackList = EC.Tool.Split(EC.DB.Custom.BlackList:lower(), ",")
     EC.Initalized = true
 
 	print("|cFFFF1C1C Loaded: "..GetAddOnMetadata(TOCNAME, "Title") .." ".. GetAddOnMetadata(TOCNAME, "Version") .." by "..GetAddOnMetadata(TOCNAME, "Author"))
@@ -94,9 +88,8 @@ function EC.SendMsg(name)
 		if EC.LfRecipeList[name] ~= nil then
 			-- Iterates over the matches requested enchants (that is capable of doing) adds them to the message
 			local msg = EC.DB.MsgPrefix
-			local msgSuffix = EC.DB.MsgSuffix
 			for k, _ in pairs(EC.LfRecipeList[name]) do 
-				msg = msg .. EC.DBChar.RecipeLinks[k] .. msgSuffix
+				msg = msg .. EC.DBChar.RecipeLinks[k]
 			end
 			SendChatMessage(msg, "WHISPER", nil, name)
 			EC.LfRecipeList[name] = nil -- Clearing it so it doesn't growing larger unnecessarily 
@@ -151,33 +144,15 @@ function EC.ParseMessage(msg, name)
 			if EC.DBChar.Debug == true then
 				print("Inviting Player: " .. name .. " for request: " .. msg)
 			end
-
 			EC.PlayerList[name] = 1
-
 			if EC.DB.AutoInvite then
-				C_Timer.After(EC.DB.InviteTimeDelay, function() InviteUnit(name) end)
-
+				InviteUnit(name)
 			end
 			-- Reason for whispering them before the join the group is in case they are already in a group
-			C_Timer.After(EC.DB.WhisperTimeDelay, function() EC.SendMsg(name) end)
+			EC.SendMsg(name)
 		else
 			-- Due to the laziness of keeping the whole recipe storage thing, this is an optimization to clear it for users that have already been invited
 			EC.LfRecipeList[name] = nil
-		end
-	elseif EC.DB.WhisperLfRequests and isRequestValid and EC.PlayerList[name] == nil then
-	
-		local isGenericEnchantRequest = false
-		local stripedMsg = string.gsub(msg:lower(), "%s+", "")
-		for _, v in pairs(EC.EnchanterTags) do
-			local stripedTag = string.gsub(v:lower(), "%s+", "")
-			if stripedTag == stripedMsg then
-				isGenericEnchantRequest = true
-			end
-		end
-
-		if isGenericEnchantRequest then 
-			EC.PlayerList[name] = 1
-			C_Timer.After(EC.DB.WhisperTimeDelay, function() SendChatMessage(EC.DB.LfWhisperMsg, "WHISPER", nil, name) end)
 		end
 	end
 end
@@ -193,17 +168,6 @@ local function Event_CHAT_MSG_CHANNEL(msg,name,_3,_4,_5,_6,_7,channelID,channel,
 	EC.ParseMessage(msg, name)
 end
 
-function Event_CHAT_MSG_SYSTEM(msg)
-	if (msg:match(_G["MARKED_AFK_MESSAGE"]:gsub("%%s", "%s-"))
-	or msg:match(_G["MARKED_DND"])
-	or msg:match(_G["IDLE_MESSAGE"]))
-	and EC.DB.AfkStop then
-		EC.Stop()
-	elseif msg:match(_G["CLEARED_AFK"]) and EC.DB.AfkStart then
-		EC.Start()
-	end
-end
-
 local function Event_ADDON_LOADED(arg1)
 	if arg1 == TOCNAME then
 		EC.Init()
@@ -217,6 +181,5 @@ function EC.OnLoad()
 	EC.Tool.RegisterEvent("CHAT_MSG_YELL",Event_CHAT_MSG_CHANNEL)
 	EC.Tool.RegisterEvent("CHAT_MSG_GUILD",Event_CHAT_MSG_CHANNEL)
 	EC.Tool.RegisterEvent("CHAT_MSG_OFFICER",Event_CHAT_MSG_CHANNEL)
-	EC.Tool.RegisterEvent("CHAT_MSG_SYSTEM",Event_CHAT_MSG_SYSTEM)
 end
 

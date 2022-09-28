@@ -1,9 +1,5 @@
-v1.5
-- Added option to delay whispers and invite
-- Functionality to also reply to generic requests such as "LF Enchanter"
-- No longer defaulting when custom tags are deleted
-- Options to configure search prefix and generic prefix
-- Command to reset tags, prefix, etc...
+v2.0 
+ - Made it work for wotlk apis
 
 v1.4
 - Ability to blacklist has been added

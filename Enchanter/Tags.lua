@@ -8,15 +8,15 @@ local function langSplit(source)
 	return ret
 end
 
-EC.DefaultPrefixTags = {"lf", "wtb", "looking for"}
+EC.PrefixTags = {"lf", "wtb", "looking for"}
 -- MIGHT NEED THIS ONE LATER 
-EC.DefaultEnchanterTags = {"lf enchanter", "looking for enchanter", "any enchanters online", "need enchanter"}
+EC.EnchanterTags = {"lf enchanter", "looking for enchanter", "any enchanters online", "need enchanter"}
 
 -- ******IMPORTANT******
 -- You can't have just a token number be part of the pattern or it will wrongly match on item links
 -- ie "spellpower to weapon,40" will match LF JC [Relentless Earthstorm Diamond] due to the "40"
 -- if instead of "40" it would be "+40" or "40+" thats okay
-EC.DefaultRecipeTags={
+EC.RecipeTags={
 	enGB = langSplit({
 	["Enchant 2H Weapon - Major Agility"] = "Enchant 2H Weapon - Major Agility,35 agi,35+ agi",
 	--["Enchant 2H Weapon - Major Intellect"] = "",
@@ -43,7 +43,7 @@ EC.DefaultRecipeTags={
 	--["Enchant Chest - Defense"] = " ",
 	["Enchant Chest - Exceptional Health"] = "Enchant Chest - Exceptional Health,150 hp,150hp,exceptional health,health to chest,150 health,150+ health",
 	--["Enchant Chest - Exceptional Mana"] = " ",
-	["Enchant Chest - Exceptional Stats"] = "Enchant Chest - Exceptional Stats,6 stat,6 to stat,exceptional stats",
+	["Enchant Chest - Exceptional Stats"] = "Enchant Chest - Exceptional Stats,6 stat,6 all stat,6 to stat,exceptional stats",
 	["Enchant Chest - Greater Stats"] = "Enchant Chest - Greater Stats,+4 stat,greater stat,4+ chest,4+ to chest,4 to chest,4 stat",
 	["Enchant Chest - Major Resilience"] = "Enchant Chest - Major Resilience,resil to chest,15 resil,major resilience,resil chest,15 res,15+ res,res to chest,res chest,15 resil to chest,major resil",
 	["Enchant Chest - Major Spirit"] = "Enchant Chest - Major Spirit,major spirit chest,major spirit to chest,15 spirit,15+ spirit",
@@ -104,6 +104,5 @@ EC.DefaultRecipeTags={
 	["Superior Mana Oil"] = "Superior Mana Oil",
 	["Superior Wizard Oil"] = "Superior Wizard Oil",
 	--["Enchant Weapon - Deathfrost"] = " ",
-	["Enchant Weapon - Agility"] = "Enchant Weapon - Agility,+15 agi,+15 agility",
 	}),
 }
