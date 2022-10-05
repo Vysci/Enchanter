@@ -30,6 +30,24 @@ function EC.GetItems()
 	end
 end
 
+local function DoScan()
+	EC.GetItems()
+	EC.UpdateTags()
+end
+
+local function defaultVariables()
+	EnchanterDB = {} 
+	EnchanterDBChar = {}
+	EC.DB=EnchanterDB
+	EC.DBChar=EnchanterDBChar
+	EC.DBChar.LastUpdated = GetAddOnMetadata("Enchanter", "Version")
+	EC.DBChar.RecipeList = {} 
+	EC.DBChar.RecipeLinks = {}
+	EC.DB.Custom={}
+	EC.DBChar.Stop = true
+	EC.DB.MsgPrefix = EC.DefaultMsg
+end
+
 function EC.Init()
 
 	-- Initalize options
@@ -46,12 +64,21 @@ function EC.Init()
 	if not EC.DBChar.Stop then EC.DBChar.Stop = false end
 	if not EC.DBChar.Debug then EC.DBChar.Debug = false end
 	if not EC.DB.MsgPrefix then EC.DB.MsgPrefix = EC.DefaultMsg end
+	if not EC.DBChar.LastUpdated then EC.DBChar.LastUpdated = -1 end
+
+	local currentVersion = GetAddOnMetadata("Enchanter", "Version")
+	if currentVersion ~= EC.DBChar.LastUpdated then
+		if EC.DBChar.Debug == true then
+			print("Last Updated: " .. EC.DBChar.LastUpdated .. " current version: " .. currentVersion)
+		end
+		defaultVariables()
+		print("NOTICE: Enchanter has been updated. You must run /ec scan")
+	end
 
 
 	EC.Tool.SlashCommand({"/ec", "/enchanter", "/e"},{
 		{"scan","MUST BE RAN PRIOR TO /ec start. Scans and stores your enchanting recipes to be used when filter for requests. NOTE: You need to rerun this when you learn new recipes",function()
-			EC.GetItems()
-			EC.UpdateTags()
+			DoScan()
 			print("Scan Completed")
 			end},
 		{{"stop", "pause"},"Pauses addon",function()
@@ -155,6 +182,20 @@ function EC.ParseMessage(msg, name)
 			EC.LfRecipeList[name] = nil
 		end
 	end
+
+	-- If the request is not a LF <specific enchant> request, we need to check if this is a generic lf enchant msg
+	if shouldInvite == false then
+		local str = msg:gsub('%W','')
+		str = str:lower()
+		for _, v in pairs (EC.EnchanterTags) do 
+			if string.find(str, "%f[%w_]" .. v .. "%f[^%w_]") and EC.DBChar.TradeLink ~= nil and EC.PlayerList[name] == nil then
+				EC.PlayerList[name] = 1
+				-- Send an enchanting link 
+				SendChatMessage(EC.DB.MsgPrefix .. EC.DBChar.TradeLink, "WHISPER", nil, name)
+
+			end
+		end
+	end
 end
 
 
@@ -174,6 +215,14 @@ local function Event_ADDON_LOADED(arg1)
 	end
 end
 
+local function Event_TRADE_SKILL_SHOW()
+	if IsTradeSkillLinked() then return end
+
+	local link = GetTradeSkillListLink()
+	if link == nil or string.find(link,"Enchant") == nil then return end
+	if EC.DBChar.TradeLink == nil then EC.DBChar.TradeLink = link end
+end
+
 function EC.OnLoad()
     EC.Tool.RegisterEvent("ADDON_LOADED",Event_ADDON_LOADED)
 	EC.Tool.RegisterEvent("CHAT_MSG_CHANNEL",Event_CHAT_MSG_CHANNEL)
@@ -181,5 +230,6 @@ function EC.OnLoad()
 	EC.Tool.RegisterEvent("CHAT_MSG_YELL",Event_CHAT_MSG_CHANNEL)
 	EC.Tool.RegisterEvent("CHAT_MSG_GUILD",Event_CHAT_MSG_CHANNEL)
 	EC.Tool.RegisterEvent("CHAT_MSG_OFFICER",Event_CHAT_MSG_CHANNEL)
+	EC.Tool.RegisterEvent("TRADE_SKILL_SHOW",Event_TRADE_SKILL_SHOW)
 end
 
