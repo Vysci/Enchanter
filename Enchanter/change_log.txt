@@ -1,3 +1,6 @@
+v2.02 
+ - Updated for Uldar
+ 
 v2.01
  - Added Wotlk recipes
  - Sends links to people asking LF Enchanter
