@@ -1,7 +1,7 @@
-## Interface: 30400
+## Interface: 30401
 ## Title: Enchanter
 ## Notes: Helps enchanters get connected with those looking for enchants
-## Version: 2.01
+## Version: 2.02
 ## Author: Vyscî-Whitemane
 ## DefaultState: enabled
 ## SavedVariables: EnchanterDB
